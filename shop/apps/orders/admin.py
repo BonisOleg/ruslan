@@ -1,8 +1,6 @@
-from django.contrib import admin, messages
+from django.contrib import admin
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
-
-from apps.shipping.services import create_internet_document
 
 from .models import Order, OrderItem
 
@@ -25,7 +23,6 @@ class OrderAdmin(ModelAdmin):
     inlines = [OrderItemInline]
     readonly_fields = ("created_at", "updated_at", "tracking_link", "status_badge")
     list_editable = ("status",)
-    actions = ["action_create_ttn"]
 
     fieldsets = (
         ("Замовлення", {
@@ -82,44 +79,3 @@ class OrderAdmin(ModelAdmin):
             url,
             obj.tracking_number,
         )
-
-    @admin.action(description="Створити ТТН у Новій Пошті")
-    def action_create_ttn(self, request, queryset):
-        success = 0
-        skipped = 0
-
-        for order in queryset:
-            if order.delivery_method != Order.DeliveryMethod.NOVA_POSHTA:
-                skipped += 1
-                continue
-
-            if order.tracking_number:
-                skipped += 1
-                continue
-
-            ttn = create_internet_document(order)
-            if ttn:
-                order.tracking_number = ttn
-                order.status = Order.Status.SHIPPED
-                order.save(update_fields=["tracking_number", "status"])
-                success += 1
-            else:
-                self.message_user(
-                    request,
-                    f"Замовлення #{order.pk}: не вдалося створити ТТН. "
-                    "Перевірте налаштування НП та наявність city_ref/warehouse_ref.",
-                    level=messages.ERROR,
-                )
-
-        if success:
-            self.message_user(
-                request,
-                f"ТТН створено для {success} замовлень.",
-                level=messages.SUCCESS,
-            )
-        if skipped:
-            self.message_user(
-                request,
-                f"Пропущено {skipped} замовлень (не НП або вже є ТТН).",
-                level=messages.WARNING,
-            )
