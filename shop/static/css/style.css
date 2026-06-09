@@ -622,11 +622,30 @@ button, input, select, textarea {
   margin-bottom: 4px;
 }
 
+.product-card__price-block {
+  margin-bottom: 8px;
+}
+
+.product-card__price-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  margin-bottom: 2px;
+}
+
 .product-card__price {
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--color-primary-dark);
-  margin-bottom: 8px;
+  margin-bottom: 2px;
+}
+
+.product-card__wholesale {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-primary);
 }
 
 .product-card__old-price {
@@ -761,6 +780,19 @@ button, input, select, textarea {
 .product-info__availability--out-of-stock {
   background: #fde8e8;
   color: var(--color-accent);
+}
+
+.product-info__price-block {
+  margin: 4px 0;
+}
+
+.product-info__price-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
 }
 
 .product-info__price {

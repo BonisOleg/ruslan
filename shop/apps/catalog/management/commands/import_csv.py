@@ -12,6 +12,8 @@ from django.utils.text import slugify
 
 from apps.catalog.models import Category, Product, ProductImage, ProductParam, WholesalePrice
 
+BOX_QTY_PARAM_NAMES = frozenset({"Количество в ящике", "Кількість у ящику"})
+
 
 class Command(BaseCommand):
     help = "Import categories, products, prices, media, params from CSV files in output/"
@@ -23,8 +25,19 @@ class Command(BaseCommand):
             default=str(settings.CSV_DATA_DIR),
             help="Path to directory containing CSV files",
         )
+        parser.add_argument(
+            "--resync-wholesale",
+            action="store_true",
+            help="Sync box quantities from params and regenerate wholesale prices only",
+        )
 
     def handle(self, *args, **options):
+        if options["resync_wholesale"]:
+            self._sync_box_quantities_from_params()
+            self._generate_wholesale_prices()
+            self.stdout.write(self.style.SUCCESS("Wholesale prices resynced."))
+            return
+
         data_dir = Path(options["data_dir"])
         self._import_categories(data_dir / "categories.csv")
         self._import_products(data_dir / "products.csv")
@@ -160,7 +173,7 @@ class Command(BaseCommand):
             bulk.append(
                 ProductParam(product=product, name=row["param_name"], value=row["param_value"])
             )
-            if row["param_name"] == "Количество в ящике":
+            if row["param_name"] in BOX_QTY_PARAM_NAMES:
                 try:
                     box_qty_updates[product.id] = int(row["param_value"])
                 except (ValueError, TypeError):
@@ -175,6 +188,23 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(f"  {len(bulk)} params, {len(box_qty_updates)} box quantities.")
         )
+
+    def _sync_box_quantities_from_params(self) -> None:
+        """Read box qty from already-imported ProductParam rows (RU + UK param names)."""
+        synced = 0
+        params = ProductParam.objects.filter(name__in=BOX_QTY_PARAM_NAMES).only(
+            "product_id", "value"
+        )
+        for param in params.iterator():
+            try:
+                qty = int(str(param.value).strip())
+            except (ValueError, TypeError):
+                continue
+            if qty <= 0:
+                continue
+            Product.objects.filter(pk=param.product_id).update(box_quantity=qty)
+            synced += 1
+        self.stdout.write(self.style.SUCCESS(f"  {synced} box quantities synced from params."))
 
     def _generate_wholesale_prices(self) -> None:
         """Auto-generate wholesale prices: ~20% discount at box_quantity threshold."""

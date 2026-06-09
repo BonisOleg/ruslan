@@ -53,8 +53,9 @@
     <span class="product-info__availability product-info__availability--out-of-stock">Немає в наявності</span>
     {% endif %}
 
-    <div class="product-info__price">
-      {{ product.retail_price|floatformat:2 }} грн
+    <div class="product-info__price-block">
+      <div class="product-info__price-label">Роздрібна ціна</div>
+      <div class="product-info__price">{{ product.retail_price|floatformat:2 }} грн</div>
     </div>
     {% if product.has_discount %}
     <div class="product-info__old-price">{{ product.old_price|floatformat:2 }} грн</div>
@@ -62,7 +63,8 @@
 
     {% if wholesale %}
     <div class="product-info__wholesale">
-      <strong>{{ wholesale.min_quantity }} або більше</strong> — {{ wholesale.price|floatformat:2 }} грн
+      <div class="product-info__price-label">Гуртова ціна</div>
+      <strong>{{ wholesale.min_quantity }} шт. або більше</strong> — {{ wholesale.price|floatformat:2 }} грн
       {% if not is_wholesale %}
       <br><small>Гуртова ціна доступна для зареєстрованих клієнтів</small>
       {% endif %}

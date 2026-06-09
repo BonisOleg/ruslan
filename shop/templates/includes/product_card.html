@@ -16,11 +16,19 @@
     <a href="{{ product.get_absolute_url }}">{{ product.name }}</a>
   </div>
   <div class="product-card__sku">Код: {{ product.sku }}</div>
-  <div class="product-card__price">
-    {{ product.retail_price|floatformat:2 }} грн
-    {% if product.has_discount %}
-    <span class="product-card__old-price">{{ product.old_price|floatformat:2 }}</span>
+  <div class="product-card__price-block">
+    <div class="product-card__price-label">Роздріб</div>
+    <div class="product-card__price">
+      {{ product.retail_price|floatformat:2 }} грн
+      {% if product.has_discount %}
+      <span class="product-card__old-price">{{ product.old_price|floatformat:2 }}</span>
+      {% endif %}
+    </div>
+    {% with wp=product.get_wholesale_price %}
+    {% if wp %}
+    <div class="product-card__wholesale">Гурт {{ wp.min_quantity }}+ — {{ wp.price|floatformat:2 }} грн</div>
     {% endif %}
+    {% endwith %}
   </div>
   <div class="product-card__actions">
     <form data-qty class="product-card__qty">

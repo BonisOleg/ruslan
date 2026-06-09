@@ -14,3 +14,4 @@ if [ "$PRODUCT_COUNT" = "0" ]; then
 else
     echo "Products already exist ($PRODUCT_COUNT) — skipping import."
 fi
+python manage.py import_csv --resync-wholesale || true
