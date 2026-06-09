@@ -17,6 +17,18 @@
   </div>
   <div class="product-card__sku">Код: {{ product.sku }}</div>
   <div class="product-card__price-block">
+    {% if is_wholesale_customer %}
+      {% with wp=product.get_wholesale_price %}
+      {% if wp %}
+      <div class="product-card__price-label">Гурт</div>
+      <div class="product-card__price">{{ wp.price|floatformat:2 }} грн</div>
+      <div class="product-card__wholesale">від 1 шт.</div>
+      {% else %}
+      <div class="product-card__price-label">Роздріб</div>
+      <div class="product-card__price">{{ product.retail_price|floatformat:2 }} грн</div>
+      {% endif %}
+      {% endwith %}
+    {% else %}
     <div class="product-card__price-label">Роздріб</div>
     <div class="product-card__price">
       {{ product.retail_price|floatformat:2 }} грн
@@ -26,9 +38,10 @@
     </div>
     {% with wp=product.get_wholesale_price %}
     {% if wp %}
-    <div class="product-card__wholesale">Гурт {{ wp.min_quantity }}+ — {{ wp.price|floatformat:2 }} грн</div>
+    <div class="product-card__wholesale">Гурт від 1 шт. — {{ wp.price|floatformat:2 }} грн</div>
     {% endif %}
     {% endwith %}
+    {% endif %}
   </div>
   <div class="product-card__actions">
     <form data-qty class="product-card__qty">

@@ -10,6 +10,7 @@ from django.db.models import Q
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 
+from apps.catalog.pricing import is_wholesale_customer, product_unit_price
 from apps.compare.models import CompareItem
 from apps.wishlist.models import WishlistItem
 
@@ -139,8 +140,9 @@ def product_detail(request: HttpRequest, slug: str) -> HttpResponse:
         ),
         slug=slug,
     )
-    is_wholesale = getattr(request.user, "is_wholesale", False)
+    is_wholesale = is_wholesale_customer(request.user)
     wholesale = product.get_wholesale_price()
+    customer_unit_price = product_unit_price(product, request.user, 1)
 
     related = Product.objects.filter(
         category=product.category, is_available=True
@@ -163,6 +165,7 @@ def product_detail(request: HttpRequest, slug: str) -> HttpResponse:
         "product": product,
         "wholesale": wholesale,
         "is_wholesale": is_wholesale,
+        "customer_unit_price": customer_unit_price,
         "related_products": related,
         "in_wishlist": in_wishlist,
         "in_compare": in_compare,

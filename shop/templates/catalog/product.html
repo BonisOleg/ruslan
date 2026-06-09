@@ -53,6 +53,17 @@
     <span class="product-info__availability product-info__availability--out-of-stock">Немає в наявності</span>
     {% endif %}
 
+    {% if is_wholesale_customer and wholesale %}
+    <div class="product-info__price-block product-info__price-block--active-wholesale">
+      <div class="product-info__price-label">Ваша гуртова ціна</div>
+      <div class="product-info__price">{{ customer_unit_price|floatformat:2 }} грн</div>
+      <small class="product-info__price-note">від 1 шт.</small>
+    </div>
+    <div class="product-info__price-block product-info__price-block--muted">
+      <div class="product-info__price-label">Роздрібна ціна</div>
+      <div class="product-info__old-price">{{ product.retail_price|floatformat:2 }} грн</div>
+    </div>
+    {% else %}
     <div class="product-info__price-block">
       <div class="product-info__price-label">Роздрібна ціна</div>
       <div class="product-info__price">{{ product.retail_price|floatformat:2 }} грн</div>
@@ -64,11 +75,10 @@
     {% if wholesale %}
     <div class="product-info__wholesale">
       <div class="product-info__price-label">Гуртова ціна</div>
-      <strong>{{ wholesale.min_quantity }} шт. або більше</strong> — {{ wholesale.price|floatformat:2 }} грн
-      {% if not is_wholesale %}
-      <br><small>Гуртова ціна доступна для зареєстрованих клієнтів</small>
-      {% endif %}
+      <strong>від 1 шт.</strong> — {{ wholesale.price|floatformat:2 }} грн
+      <br><small>Доступна після підтвердження гуртового статусу в особистому кабінеті</small>
     </div>
+    {% endif %}
     {% endif %}
 
     {% if product.is_available %}

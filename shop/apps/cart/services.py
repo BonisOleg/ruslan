@@ -13,7 +13,9 @@ def _ensure_session(request: HttpRequest) -> str:
 
 
 def get_cart_items(request: HttpRequest) -> QuerySet[CartItem]:
-    qs = CartItem.objects.select_related("product").prefetch_related("product__images")
+    qs = CartItem.objects.select_related("product").prefetch_related(
+        "product__images", "product__wholesale_prices"
+    )
     if request.user.is_authenticated:
         return qs.filter(user=request.user)
     session_key = request.session.session_key

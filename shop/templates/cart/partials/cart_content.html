@@ -1,4 +1,4 @@
-{% load humanize %}
+{% load humanize cart_tags %}
 {% if cart_items %}
 <table class="cart-table">
   <thead>
@@ -15,7 +15,7 @@
           <a href="{{ item.product.get_absolute_url }}">{{ item.product.name }}</a>
         </div>
       </td>
-      <td>{{ item.product.retail_price|floatformat:2 }} грн</td>
+      <td>{{ item|cart_unit_price:request.user|floatformat:2 }} грн</td>
       <td>
         <div data-qty style="display:inline-flex;align-items:center;border:1px solid var(--color-border);border-radius:var(--radius)">
           <button type="button" data-qty-btn="minus" style="width:30px;height:30px;border:none;background:var(--color-bg);cursor:pointer">-</button>
@@ -28,7 +28,7 @@
           <button type="button" data-qty-btn="plus" style="width:30px;height:30px;border:none;background:var(--color-bg);cursor:pointer">+</button>
         </div>
       </td>
-      <td>{{ item.subtotal|floatformat:2 }} грн</td>
+      <td>{{ item|cart_line_total:request.user|floatformat:2 }} грн</td>
       <td>
         <button class="btn btn--icon"
                 hx-post="{% url 'cart:remove' item.pk %}"

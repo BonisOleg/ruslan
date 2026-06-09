@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
 from apps.cart.services import clear_cart, get_cart_items
+from apps.catalog.pricing import cart_line_subtotal, product_unit_price
 from apps.payments.services import create_monobank_invoice
 
 from .forms import CheckoutForm
@@ -25,7 +26,9 @@ def checkout(request: HttpRequest) -> HttpResponse:
             order = form.save(commit=False)
             if request.user.is_authenticated:
                 order.user = request.user
-            order.total = sum(i.product.retail_price * i.quantity for i in cart_items)
+            order.total = sum(
+                cart_line_subtotal(i.product, request.user, i.quantity) for i in cart_items
+            )
             order.save()
 
             for item in cart_items:
@@ -35,7 +38,7 @@ def checkout(request: HttpRequest) -> HttpResponse:
                     product_name=item.product.name,
                     sku=item.product.sku,
                     quantity=item.quantity,
-                    price=item.product.retail_price,
+                    price=product_unit_price(item.product, request.user, item.quantity),
                 )
             clear_cart(request)
 
@@ -67,7 +70,9 @@ def checkout(request: HttpRequest) -> HttpResponse:
             }
         form = CheckoutForm(initial=initial)
 
-    total = sum(i.product.retail_price * i.quantity for i in cart_items)
+    total = sum(
+        cart_line_subtotal(i.product, request.user, i.quantity) for i in cart_items
+    )
     return render(request, "orders/checkout.html", {
         "form": form, "cart_items": cart_items, "cart_total": total,
     })

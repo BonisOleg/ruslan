@@ -71,6 +71,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.accounts.context_processors.wholesale_customer",
                 "apps.catalog.context_processors.categories_menu",
                 "apps.cart.context_processors.cart_summary",
                 "apps.pages.context_processors.site_settings",

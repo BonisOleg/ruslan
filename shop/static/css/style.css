@@ -786,6 +786,21 @@ button, input, select, textarea {
   margin: 4px 0;
 }
 
+.product-info__price-block--active-wholesale .product-info__price {
+  color: var(--color-primary);
+}
+
+.product-info__price-block--muted {
+  margin-top: 8px;
+}
+
+.product-info__price-note {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
 .product-info__price-label {
   font-size: 0.78rem;
   font-weight: 600;

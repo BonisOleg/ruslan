@@ -207,14 +207,14 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"  {synced} box quantities synced from params."))
 
     def _generate_wholesale_prices(self) -> None:
-        """Auto-generate wholesale prices: ~20% discount at box_quantity threshold."""
-        products = Product.objects.filter(box_quantity__gt=0, retail_price__gt=0)
+        """Auto-generate wholesale prices: ~20% discount from 1 pc for wholesale customers."""
+        products = Product.objects.filter(retail_price__gt=0)
         self.stdout.write(f"Generating wholesale prices for {products.count()} products...")
 
         bulk = []
         for p in products.iterator():
             wholesale = (p.retail_price * Decimal("0.80")).quantize(Decimal("0.01"))
-            bulk.append(WholesalePrice(product=p, min_quantity=p.box_quantity, price=wholesale))
+            bulk.append(WholesalePrice(product=p, min_quantity=1, price=wholesale))
 
         WholesalePrice.objects.all().delete()
         WholesalePrice.objects.bulk_create(bulk, batch_size=500)
