@@ -20,6 +20,7 @@ app_name = "catalog"
 urlpatterns = [
     path("", views.homepage, name="home"),
     path("search/", views.search, name="search"),
+    path("image/<int:pk>/", views.product_image_proxy, name="image_proxy"),
     path("category/<uslug:slug>/", views.category_detail, name="category"),
     path("product/<uslug:slug>/", views.product_detail, name="product"),
 ]

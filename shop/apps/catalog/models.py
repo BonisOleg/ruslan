@@ -133,6 +133,12 @@ class ProductImage(models.Model):
     def url(self) -> str:
         if self.image:
             return self.image.url
+        from django.conf import settings
+
+        if getattr(settings, "USE_IMAGE_PROXY", False) and self.pk:
+            from django.urls import reverse
+
+            return reverse("catalog:image_proxy", kwargs={"pk": self.pk})
         return self.image_url
 
 

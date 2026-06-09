@@ -1,10 +1,10 @@
-{% load humanize %}
+{% load humanize static %}
 <article class="product-card">
   <a href="{{ product.get_absolute_url }}" class="product-card__image">
     {% if product.main_image %}
-    <img src="{{ product.main_image.url }}" alt="{{ product.name }}" loading="lazy">
+    <img src="{{ product.main_image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async">
     {% else %}
-    <img src="https://via.placeholder.com/220x220?text=No+Image" alt="{{ product.name }}">
+    <img src="{% static 'images/no-image.svg' %}" alt="{{ product.name }}" loading="lazy" decoding="async">
     {% endif %}
   </a>
   <div class="product-card__badges">

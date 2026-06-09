@@ -1,6 +1,7 @@
 from .base import *  # noqa: F401, F403
 
 DEBUG = False
+USE_IMAGE_PROXY = True
 
 DATABASES = {
     "default": env.db("DATABASE_URL"),  # noqa: F405

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load humanize %}
+{% load humanize static %}
 
 {% block title %}{{ product.name }} — DOMOTEH{% endblock %}
 
@@ -22,7 +22,11 @@
   <div class="product-gallery">
     <div class="product-gallery__main" data-gallery-main>
       {% with img=product.main_image %}
-      <img src="{{ img.url|default:'https://via.placeholder.com/500x500?text=No+Image' }}" alt="{{ product.name }}">
+      {% if img %}
+      <img src="{{ img.url }}" alt="{{ product.name }}" decoding="async">
+      {% else %}
+      <img src="{% static 'images/no-image.svg' %}" alt="{{ product.name }}" decoding="async">
+      {% endif %}
       {% endwith %}
     </div>
     {% if product.images.count > 1 %}

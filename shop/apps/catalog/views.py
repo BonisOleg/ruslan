@@ -1,12 +1,66 @@
+import hashlib
+import logging
+from urllib.parse import urlparse
+
+import requests
+from django.conf import settings
+from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import HttpRequest, HttpResponse
+from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 
 from apps.compare.models import CompareItem
 from apps.wishlist.models import WishlistItem
 
-from .models import Category, Product
+from .models import Category, Product, ProductImage
+
+logger = logging.getLogger(__name__)
+
+_IMAGE_CACHE_TTL = 60 * 60 * 24 * 7  # 7 days
+
+
+def product_image_proxy(request: HttpRequest, pk: int) -> HttpResponse:
+    """Fetch and cache external product images under our domain."""
+    img = get_object_or_404(ProductImage.objects.only("pk", "image_url", "image"), pk=pk)
+
+    if img.image:
+        return HttpResponseRedirect(img.image.url)
+
+    parsed = urlparse(img.image_url)
+    allowed = getattr(settings, "IMAGE_PROXY_ALLOWED_HOSTS", set())
+    if parsed.scheme not in {"http", "https"} or parsed.hostname not in allowed:
+        raise Http404
+
+    cache_key = f"product_image:{pk}:{hashlib.sha256(img.image_url.encode()).hexdigest()}"
+    cached = cache.get(cache_key)
+    if cached:
+        content, content_type = cached
+        response = HttpResponse(content, content_type=content_type)
+        response["Cache-Control"] = "public, max-age=604800, immutable"
+        return response
+
+    try:
+        upstream = requests.get(
+            img.image_url,
+            timeout=15,
+            headers={"User-Agent": "DOMOTEH-ImageProxy/1.0"},
+        )
+        upstream.raise_for_status()
+    except requests.RequestException:
+        logger.warning("Image proxy failed for ProductImage #%s", pk)
+        raise Http404 from None
+
+    content_type = upstream.headers.get("Content-Type", "image/jpeg").split(";")[0].strip()
+    if not content_type.startswith("image/"):
+        raise Http404
+
+    content = upstream.content
+    cache.set(cache_key, (content, content_type), _IMAGE_CACHE_TTL)
+
+    response = HttpResponse(content, content_type=content_type)
+    response["Cache-Control"] = "public, max-age=604800, immutable"
+    return response
 
 
 def homepage(request: HttpRequest) -> HttpResponse:

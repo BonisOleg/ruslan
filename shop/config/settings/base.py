@@ -114,6 +114,10 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
 CSV_DATA_DIR = BASE_DIR.parent / "output"
 
+# Serve external product images through our domain (avoids hotlink blocks)
+USE_IMAGE_PROXY = env.bool("USE_IMAGE_PROXY", default=False)
+IMAGE_PROXY_ALLOWED_HOSTS = {"lmm.in.ua", "www.lmm.in.ua"}
+
 CKEDITOR_5_CONFIGS = {
     "default": {
         "toolbar": {
