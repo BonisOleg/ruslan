@@ -29,17 +29,13 @@ class CheckoutForm(forms.ModelForm):
                 "id": "id_delivery_method",
             }),
             "delivery_address": forms.Textarea(attrs={"class": "form-input", "rows": 2}),
-            # NP city: text input with HTMX autocomplete
+            # NP city: search input + select list loaded via JS
             "nova_poshta_city": forms.TextInput(attrs={
                 "class": "form-input",
-                "placeholder": "Введіть назву міста...",
+                "placeholder": "Почніть вводити назву міста...",
                 "autocomplete": "off",
-                "hx-get": "/shipping/np/cities/",
-                "hx-trigger": "keyup delay:400ms changed",
-                "hx-target": "#np-city-dropdown",
-                "hx-include": "this",
-                "name": "q",
                 "id": "id_nova_poshta_city_input",
+                "aria-describedby": "np-city-hint",
             }),
             # NP city ref: hidden, populated by JS
             "nova_poshta_city_ref": forms.HiddenInput(attrs={"id": "id_nova_poshta_city_ref"}),

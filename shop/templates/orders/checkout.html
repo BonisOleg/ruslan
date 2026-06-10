@@ -54,37 +54,34 @@
   /* ── Nova Poshta autocomplete ────────────────────────────────────────── */
   .np-field-wrap { position: relative; }
 
-  .np-dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0; right: 0;
-    background: var(--color-surface, #fff);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    box-shadow: 0 4px 16px rgba(0,0,0,.12);
-    list-style: none;
-    margin: 0; padding: 4px 0;
-    z-index: 200;
-    max-height: 260px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+  .np-form-group { overflow: visible; }
+
+  .np-field-hint {
+    margin-top: 6px;
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
   }
 
-  .np-dropdown__item {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    padding: 10px 14px;
-    cursor: pointer;
-    transition: background 0.12s;
+  #np-city-dropdown { margin-top: 8px; }
+
+  .np-city-select {
+    width: 100%;
+    min-height: 120px;
   }
 
-  .np-dropdown__item:hover,
-  .np-dropdown__item:focus { background: color-mix(in srgb, var(--color-accent) 8%, transparent); }
+  .np-dropdown__hint {
+    display: block;
+    margin: 0 0 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text);
+  }
 
-  .np-dropdown__name { font-size: 0.9rem; font-weight: 500; color: var(--color-text); }
-  .np-dropdown__area { font-size: 0.78rem; color: var(--color-text-muted); }
-  .np-dropdown__empty { padding: 12px 14px; font-size: 0.85rem; color: var(--color-text-muted); }
+  .np-dropdown__empty {
+    padding: 8px 0;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
 
   /* warehouse wrapper */
   .np-warehouse-wrap { margin-top: 8px; min-height: 44px; }
@@ -108,6 +105,9 @@
     line-height: 1;
     color: var(--color-text-muted);
     font-size: 1rem;
+    border: none;
+    background: transparent;
+    padding: 0;
   }
 
   /* htmx loading indicator */
@@ -172,16 +172,16 @@
 
       {# Nova Poshta fields — shown only when nova_poshta selected #}
       <div id="np-section" style="display:none">
-        <div class="form-group">
+        <div class="form-group np-form-group">
           <label for="id_nova_poshta_city_input">Місто</label>
           <div class="np-field-wrap">
             {{ form.nova_poshta_city }}
-            <span class="htmx-indicator" aria-label="Завантаження...">⏳</span>
-            <div id="np-city-dropdown"></div>
           </div>
+          <p class="np-field-hint">Введіть мінімум 2 літери — з’явиться список для вибору</p>
+          <div id="np-city-dropdown"></div>
           <div id="np-city-selected" style="display:none" class="np-city-badge">
             <span id="np-city-selected-name"></span>
-            <span class="np-city-badge__clear" onclick="npClearCity()" title="Очистити">&times;</span>
+            <button type="button" class="np-city-badge__clear" id="np-city-clear" aria-label="Очистити місто">&times;</button>
           </div>
         </div>
         <div class="form-group">
@@ -292,64 +292,102 @@
     .addEventListener('change', updateDeliverySections);
   updateDeliverySections(); // run on page load
 
-  // ── Nova Poshta city autocomplete ───────────────────────────────────
-  const cityInput    = document.getElementById('id_nova_poshta_city_input');
-  const cityRefInput = document.getElementById('id_nova_poshta_city_ref');
-  const cityDropdown = document.getElementById('np-city-dropdown');
-  const cityBadge    = document.getElementById('np-city-selected');
-  const cityBadgeName= document.getElementById('np-city-selected-name');
-  const warehouseWrap= document.getElementById('np-warehouse-wrap');
-  const whRefInput   = document.getElementById('id_nova_poshta_warehouse_ref');
-  const whNameInput  = document.getElementById('id_nova_poshta_warehouse');
+  // ── Nova Poshta city search + select ────────────────────────────────
+  const cityInput     = document.getElementById('id_nova_poshta_city_input');
+  const cityRefInput  = document.getElementById('id_nova_poshta_city_ref');
+  const cityDropdown  = document.getElementById('np-city-dropdown');
+  const cityBadge     = document.getElementById('np-city-selected');
+  const cityBadgeName = document.getElementById('np-city-selected-name');
+  const cityClearBtn  = document.getElementById('np-city-clear');
+  const warehouseWrap = document.getElementById('np-warehouse-wrap');
+  const whRefInput    = document.getElementById('id_nova_poshta_warehouse_ref');
+  const whNameInput   = document.getElementById('id_nova_poshta_warehouse');
+  let citySearchTimer = null;
 
-  // Close dropdown when clicking outside
-  document.addEventListener('click', function (e) {
-    if (!cityInput.contains(e.target) && !cityDropdown.contains(e.target)) {
+  function npLoadCities(query) {
+    if (query.length < 2) {
       cityDropdown.innerHTML = '';
+      return;
     }
-  });
+    cityDropdown.innerHTML = '<p class="np-dropdown__empty">Завантаження...</p>';
+    fetch('/shipping/np/cities/?q=' + encodeURIComponent(query))
+      .then((response) => response.text())
+      .then((html) => { cityDropdown.innerHTML = html; })
+      .catch(() => {
+        cityDropdown.innerHTML = '<p class="np-dropdown__empty">Не вдалося завантажити міста</p>';
+      });
+  }
 
-  // Called by HTMX after cities are loaded — nothing needed, HTMX fills the target
-  // City item click
-  window.npSelectCity = function (el) {
-    const ref  = el.dataset.ref;
-    const name = el.dataset.name;
+  function npLoadWarehouses(cityRef) {
+    warehouseWrap.innerHTML = '<p class="np-dropdown__empty">Завантаження відділень...</p>';
+    fetch('/shipping/np/warehouses/?city_ref=' + encodeURIComponent(cityRef))
+      .then((response) => response.text())
+      .then((html) => { warehouseWrap.innerHTML = html; })
+      .catch(() => {
+        warehouseWrap.innerHTML = '<p class="np-dropdown__empty">Не вдалося завантажити відділення</p>';
+      });
+  }
 
+  function npSelectCity(ref, name) {
     cityRefInput.value = ref;
-    cityInput.value    = name;
+    cityInput.value = name;
     cityDropdown.innerHTML = '';
     cityBadgeName.textContent = name;
     cityBadge.style.display = '';
-
-    // Load warehouses via HTMX
-    htmx.ajax('GET', '/shipping/np/warehouses/?city_ref=' + encodeURIComponent(ref), {
-      target: '#np-warehouse-wrap',
-      swap: 'innerHTML',
-    });
-
-    // Clear previously selected warehouse
-    whRefInput.value  = '';
+    cityInput.style.display = 'none';
+    npLoadWarehouses(ref);
+    whRefInput.value = '';
     whNameInput.value = '';
-  };
+  }
 
-  // Clear city selection
-  window.npClearCity = function () {
+  function npClearCity() {
     cityRefInput.value = '';
-    cityInput.value    = '';
+    cityInput.value = '';
+    cityInput.style.display = '';
     cityDropdown.innerHTML = '';
     cityBadge.style.display = 'none';
-    whRefInput.value  = '';
+    whRefInput.value = '';
     whNameInput.value = '';
     warehouseWrap.innerHTML = '<p class="np-dropdown__empty" style="padding:0">Спочатку оберіть місто</p>';
     cityInput.focus();
-  };
+  }
 
-  // Warehouse select change
-  window.npSelectWarehouse = function (sel) {
+  function npSelectWarehouse(sel) {
     const opt = sel.options[sel.selectedIndex];
-    whRefInput.value  = sel.value;
-    whNameInput.value = opt.dataset.address || opt.text;
-  };
+    whRefInput.value = sel.value;
+    whNameInput.value = opt?.dataset.address || opt?.text || '';
+  }
+
+  cityInput.addEventListener('input', () => {
+    clearTimeout(citySearchTimer);
+    const query = cityInput.value.trim();
+    if (cityRefInput.value) {
+      cityRefInput.value = '';
+      cityBadge.style.display = 'none';
+    }
+    citySearchTimer = setTimeout(() => npLoadCities(query), 400);
+  });
+
+  cityDropdown.addEventListener('change', (event) => {
+    if (event.target.id !== 'np-city-select') return;
+    const opt = event.target.options[event.target.selectedIndex];
+    if (!opt?.value) return;
+    npSelectCity(opt.value, opt.dataset.name || opt.textContent.trim());
+  });
+
+  cityDropdown.addEventListener('click', (event) => {
+    const option = event.target.closest('option');
+    if (!option?.value || !option.closest('#np-city-select')) return;
+    npSelectCity(option.value, option.dataset.name || option.textContent.trim());
+  });
+
+  warehouseWrap.addEventListener('change', (event) => {
+    if (event.target.id === 'np-warehouse-select') {
+      npSelectWarehouse(event.target);
+    }
+  });
+
+  cityClearBtn.addEventListener('click', npClearCity);
 
   // ── Form validation before submit ──────────────────────────────────
   document.getElementById('checkout-form').addEventListener('submit', function (e) {

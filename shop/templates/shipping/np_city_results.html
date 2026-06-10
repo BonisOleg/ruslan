@@ -1,18 +1,14 @@
 {% if cities %}
-<ul class="np-dropdown" role="listbox" aria-label="Результати пошуку міст">
+<p class="np-dropdown__hint" id="np-city-hint">Оберіть місто зі списку:</p>
+<select class="form-select np-city-select" id="np-city-select" size="{% if cities|length > 8 %}8{% else %}{{ cities|length }}{% endif %}">
   {% for city in cities %}
-  <li class="np-dropdown__item"
-      role="option"
-      data-ref="{{ city.Ref }}"
-      data-name="{{ city.Description }}"
-      onclick="npSelectCity(this)">
-    <span class="np-dropdown__name">{{ city.Description }}</span>
-    {% if city.AreaDescription %}
-    <span class="np-dropdown__area">{{ city.AreaDescription }} обл.</span>
-    {% endif %}
-  </li>
+  <option value="{{ city.Ref }}" data-name="{{ city.Description }}">
+    {{ city.Description }}{% if city.AreaDescription %}, {{ city.AreaDescription }} обл.{% endif %}
+  </option>
   {% endfor %}
-</ul>
+</select>
 {% elif query %}
-<p class="np-dropdown__empty">Нічого не знайдено за «{{ query }}»</p>
+<p class="np-dropdown__empty" id="np-city-hint">Нічого не знайдено за «{{ query }}»</p>
+{% else %}
+<p class="np-dropdown__empty" id="np-city-hint">Введіть мінімум 2 літери</p>
 {% endif %}

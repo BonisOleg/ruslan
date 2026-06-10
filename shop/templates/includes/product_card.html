@@ -36,11 +36,6 @@
       <span class="product-card__old-price">{{ product.old_price|floatformat:2 }}</span>
       {% endif %}
     </div>
-    {% with wp=product.get_wholesale_price %}
-    {% if wp %}
-    <div class="product-card__wholesale">Гурт від 1 шт. — {{ wp.price|floatformat:2 }} грн</div>
-    {% endif %}
-    {% endwith %}
     {% endif %}
   </div>
   <div class="product-card__actions">

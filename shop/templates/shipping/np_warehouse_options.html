@@ -1,5 +1,6 @@
 {% if warehouses %}
-<select class="form-select" id="np-warehouse-select" onchange="npSelectWarehouse(this)">
+<label class="np-dropdown__hint" for="np-warehouse-select">Оберіть відділення:</label>
+<select class="form-select" id="np-warehouse-select">
   <option value="">— Оберіть відділення —</option>
   {% for w in warehouses %}
   <option value="{{ w.Ref }}" data-address="{{ w.Description }}">
@@ -8,5 +9,5 @@
   {% endfor %}
 </select>
 {% else %}
-<p class="np-dropdown__empty">Спочатку оберіть місто</p>
+<p class="np-dropdown__empty">Відділення не знайдено</p>
 {% endif %}

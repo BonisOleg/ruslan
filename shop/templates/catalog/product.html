@@ -71,14 +71,6 @@
     {% if product.has_discount %}
     <div class="product-info__old-price">{{ product.old_price|floatformat:2 }} грн</div>
     {% endif %}
-
-    {% if wholesale %}
-    <div class="product-info__wholesale">
-      <div class="product-info__price-label">Гуртова ціна</div>
-      <strong>від 1 шт.</strong> — {{ wholesale.price|floatformat:2 }} грн
-      <br><small>Доступна після підтвердження гуртового статусу в особистому кабінеті</small>
-    </div>
-    {% endif %}
     {% endif %}
 
     {% if product.is_available %}

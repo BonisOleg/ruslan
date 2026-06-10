@@ -7,8 +7,11 @@ from .services import get_warehouses, search_cities
 
 
 def np_cities(request: HttpRequest) -> HttpResponse:
-    """HTMX: search cities by query string. Returns partial HTML list."""
-    query = request.GET.get("q", "").strip()
+    """Search cities by query string. Returns partial HTML list."""
+    query = (
+        request.GET.get("q", "").strip()
+        or request.GET.get("nova_poshta_city", "").strip()
+    )
     cities = search_cities(query) if len(query) >= 2 else []
     return render(request, "shipping/np_city_results.html", {"cities": cities, "query": query})
 
