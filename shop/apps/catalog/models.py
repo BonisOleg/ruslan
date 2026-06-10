@@ -117,8 +117,8 @@ class Product(models.Model):
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
-    image_url = models.URLField("URL зображення", max_length=500)
-    image = models.ImageField("Локальне зображення", upload_to="products/", blank=True)
+    image_url = models.URLField("URL зображення", max_length=500, blank=True, default="")
+    image = models.ImageField("Фото", upload_to="products/", blank=True)
     sort_order = models.PositiveIntegerField("Порядок", default=0)
 
     class Meta:

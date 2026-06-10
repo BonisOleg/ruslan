@@ -47,14 +47,20 @@ class CategoryAdmin(ModelAdmin, DraggableMPTTAdmin):
 class ProductImageInline(TabularInline):
     model = ProductImage
     extra = 1
+    fields = ("get_image_preview", "image", "sort_order")
+    readonly_fields = ("get_image_preview",)
 
     @admin.display(description="Прев'ю")
     def get_image_preview(self, obj: ProductImage) -> str:
-        if obj.image:
-            return format_html('<img src="{}" style="height:60px;border-radius:4px">', obj.image.url)
-        return "—"
-
-    readonly_fields = ("get_image_preview",)
+        if not obj.pk:
+            return "—"
+        src = obj.url
+        if not src:
+            return "—"
+        return format_html(
+            '<img src="{}" alt="" style="height:60px;max-width:80px;object-fit:contain;border-radius:4px">',
+            src,
+        )
 
 
 class ProductParamInline(TabularInline):
@@ -88,9 +94,15 @@ class ProductAdmin(ModelAdmin):
     @admin.display(description="Фото")
     def get_image_preview(self, obj: Product) -> str:
         first = obj.images.first()
-        if first and first.image:
-            return format_html('<img src="{}" style="height:60px;border-radius:4px">', first.image.url)
-        return "—"
+        if not first:
+            return "—"
+        src = first.url
+        if not src:
+            return "—"
+        return format_html(
+            '<img src="{}" alt="" style="height:60px;max-width:80px;object-fit:contain;border-radius:4px">',
+            src,
+        )
 
     def get_urls(self):
         urls = super().get_urls()
