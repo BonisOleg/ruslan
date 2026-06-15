@@ -3,6 +3,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+
 admin.site.site_header = "Адміністрування магазину"
 admin.site.site_title = "Магазин"
 admin.site.index_title = "Панель керування"
@@ -23,5 +24,7 @@ urlpatterns = [
     path("pages/", include("apps.pages.urls")),
 ]
 
-if settings.DEBUG:
+# Serve media locally when no cloud storage is configured (dev + Render without Cloudinary)
+_using_cloud = bool(getattr(settings, "CLOUDINARY_URL", ""))
+if settings.DEBUG or not _using_cloud:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
